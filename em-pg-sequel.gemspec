@@ -20,5 +20,5 @@ Gem::Specification.new do |gem|
   gem.add_dependency "em-synchrony"
   gem.add_dependency "em-pg-client"
 
-  gem.add_development_dependency "em-synchrony"
+  gem.add_development_dependency "rake"
 end

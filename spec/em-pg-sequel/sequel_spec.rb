@@ -8,14 +8,18 @@ describe EM::PG::Sequel do
 
   let(:url) { DB_URL }
   let(:size) { 1 }
-  let(:db) { Sequel.connect(url, max_connection: size, pool_class: EM::PG::ConnectionPool, db_logger: Logger.new(nil)) }
+  let(:db) { Sequel.connect(url, max_connection: size, db_logger: Logger.new(nil)) }
   let(:test) { db[:test] }
 
-  after(:each) do
+  after do
     db.disconnect
   end
 
-  describe "unexist table" do
+  it "sets connection pool" do
+    db.instance_variable_get(:@pool).must_be_instance_of(EM::PG::Sequel::DatabaseConnectionPool)
+  end
+
+  describe "table does not exist" do
     it "should raise exception" do
       EM.synchrony do
         proc { test.all }.must_raise Sequel::DatabaseError
@@ -25,8 +29,7 @@ describe EM::PG::Sequel do
     end
   end
 
-  describe "exist table" do
-
+  describe "table exists" do
     before do
       EM.synchrony do
         db.create_table!(:test) do
@@ -47,7 +50,7 @@ describe EM::PG::Sequel do
     end
 
     it "should connect and execute query" do
-      EM.synchrony do 
+      EM.synchrony do
         test.insert name: "andrew", value: 42
         test.where(name: "andrew").first[:value].must_equal 42
 
@@ -55,9 +58,9 @@ describe EM::PG::Sequel do
       end
     end
 
-
     describe "pool size is exceeded" do
       let(:size) { 1 }
+
       it "should queue requests" do
         EM.synchrony do
           start = Time.now.to_f
@@ -76,7 +79,8 @@ describe EM::PG::Sequel do
 
     describe "pool size is enough" do
       let(:size) { 2 }
-      it "should parallel requests" do
+
+      it "should parallelize requests" do
         EM.synchrony do
           start = Time.now.to_f
 

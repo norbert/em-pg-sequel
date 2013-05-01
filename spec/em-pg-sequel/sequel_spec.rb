@@ -11,6 +11,10 @@ describe EM::PG::Sequel do
   let(:db) { Sequel.connect(url, max_connection: size, pool_class: EM::PG::ConnectionPool, db_logger: Logger.new(nil)) }
   let(:test) { db[:test] }
 
+  after(:each) do
+    db.disconnect
+  end
+
   describe "unexist table" do
     it "should raise exception" do
       EM.synchrony do
